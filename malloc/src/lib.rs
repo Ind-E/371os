@@ -1,3 +1,5 @@
+#![allow(static_mut_refs)]
+
 // Treat ourselves to a kb (1024 bits)
 // 1024 >> 3 == 128 == 0x80
 pub const SIZE: usize = 0x80;
@@ -59,27 +61,21 @@ fn init() {
     return;
 }
 
-pub fn setter(value: i32, address: usize) {
+pub fn setter<T>(value: T, address: usize) {
     unsafe {
-        let bytes: [u8; 4] = i32::to_ne_bytes(value);
-        BUS[address] = bytes[0];
-        BUS[address + 1] = bytes[1];
-        BUS[address + 2] = bytes[2];
-        BUS[address + 3] = bytes[3];
-        println!("set {value:032b} starting at address {address}");
+        let dst = BUS.as_mut_ptr().add(address) as *mut T;
+        std::ptr::write_unaligned(dst, value);
         print_bus();
     }
 }
 
-pub fn getter(address: usize) -> i32 {
+pub fn getter<T>(address: usize) -> T {
     unsafe {
-        let bytes: [u8; 4] = BUS[address..address + 4].try_into().unwrap();
-        let value = i32::from_ne_bytes(bytes);
-        value
+        let src = BUS.as_ptr().add(address) as *const T;
+        std::ptr::read_unaligned(src)
     }
 }
 
-#[allow(static_mut_refs)]
 fn print_bus() {
     println!();
     unsafe {
