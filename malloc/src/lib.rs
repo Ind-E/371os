@@ -1,5 +1,3 @@
-#![allow(static_mut_refs)]
-
 // Treat ourselves to a kb (1024 bits)
 // 1024 >> 3 == 128 == 0x80
 pub const SIZE: usize = 0x80;
@@ -63,27 +61,35 @@ fn init() {
 
 pub fn setter<T>(value: T, address: usize) {
     unsafe {
-        let dst = BUS.as_mut_ptr().add(address) as *mut T;
-        std::ptr::write_unaligned(dst, value);
+        (&raw mut BUS)
+            .cast::<u8>()
+            .add(address)
+            .cast::<T>()
+            .write_unaligned(value);
         print_bus();
     }
 }
 
 pub fn getter<T>(address: usize) -> T {
     unsafe {
-        let src = BUS.as_ptr().add(address) as *const T;
-        std::ptr::read_unaligned(src)
+        (&raw mut BUS)
+            .cast::<u8>()
+            .add(address)
+            .cast::<T>()
+            .read_unaligned()
     }
 }
 
 fn print_bus() {
     println!();
+    let mut i = 0;
     unsafe {
-        for (i, byte) in BUS.iter().enumerate() {
+        for byte in BUS {
             if i % 8 == 0 && i != 0 {
                 println!();
             }
             print!("{:08b} ", byte);
+            i += 1;
         }
     }
     println!();
