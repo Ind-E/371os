@@ -29,6 +29,7 @@ pub fn malloc(s: usize) -> Option<usize> {
                     contig_size += 1;
                     if contig_size == s {
                         BUS = bus_copy;
+                        print_bus();
                         println!("malloc: returning address {}", contig_region_start.unwrap());
                         return contig_region_start;
                     }
@@ -39,8 +40,8 @@ pub fn malloc(s: usize) -> Option<usize> {
                 byte += 1;
             }
         }
-        print_bus();
     }
+    print_bus();
     println!("malloc: returning none");
     return None;
 }
@@ -56,7 +57,6 @@ fn init() {
         println!("init:");
         print_bus()
     }
-    return;
 }
 
 pub fn setter<T>(value: T, address: usize) {
@@ -66,8 +66,9 @@ pub fn setter<T>(value: T, address: usize) {
             .add(address)
             .cast::<T>()
             .write_unaligned(value);
-        print_bus();
     }
+    println!("setting byte {address}");
+    print_bus();
 }
 
 pub fn getter<T>(address: usize) -> T {
